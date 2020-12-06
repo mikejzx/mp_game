@@ -1,0 +1,5 @@
+mp_client_nonet
+===============
+
+This is the client application, without networking support
+yet. This is simply to work out how the "game" itself runs first.

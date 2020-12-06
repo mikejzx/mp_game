@@ -1,0 +1,5 @@
+mp_client
+=========
+
+This is the client application, that has networking support
+built in.

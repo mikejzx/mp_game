@@ -1,0 +1,9 @@
+mp_game
+=======
+
+This is an attempt at writing a basic "multiplayer" game in C that runs
+in the terminal. I guess I decided to write this to teach myself a
+little more about how to use sockets.
+
+The repository consists of two projects, mp_server, and mp_client,
+which are the games client and server respectively (surprise surprise).
