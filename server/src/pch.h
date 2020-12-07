@@ -2,11 +2,12 @@
 #define MP_PCH_H
 
 // Standard includes.
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
+#include <pthread.h>
 
 // Networking
 #include <arpa/inet.h>
@@ -14,10 +15,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 
-// Libraries
-#include <ncurses.h>
-
-// Some constants
+// Other defines
 #define TRUE 1
 #define FALSE 0
 #define FAIL 0

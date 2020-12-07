@@ -10,9 +10,9 @@
  * that has networking support built-in.
  *
  * Basic plan of how to do things:
- * + Ask user to enter IP address of server
- *   (and a username in future)
- * + Connect to the server.
+ * + (DONE) Ask user to enter IP address of server (and a username in future)
+ * + (DONE) Connect to the server.
+ * + Client asks server if they're in.
  * + Server decides where player spawns, sends data back.
  * + Client asks server for all the players information
  *   and client stores this information.
@@ -22,19 +22,17 @@
  */
 
 #include "pch.h"
+#include "mp_tcp.h"
 
 // Debugging
 #define DEBUG_SKIP_SERVER 1
-#define DEBUG_SERVER_IP_OVERRIDE "localhost"
+#define DEBUG_SERVER_IP_OVERRIDE "127.0.0.1"
 
 // Grid constants
 #define GRID_WIDTH 40
 #define GRID_HEIGHT 15
 
 // Other constants
-#define TRUE 1
-#define FALSE 0
-#define FAIL 0
 #define CURSOR_HIDE 0
 #define CURSOR_SHOW 0
 #define GAME_SPEED 300
@@ -73,12 +71,16 @@ typedef struct
 // static player* players;
 // static size_t player_count;
 // static const int player_idx;
+static mp_tcp* tcp;
 
 /*
  * Entry point of the application.
  */
 int main(void)
 {
+	// Status code.
+	int status = 0;
+
 	// Register signal interrupt handler.
 	struct sigaction sigact_inter;
 	sigact_inter.sa_handler = signal_interrupt_handler;
@@ -112,8 +114,20 @@ int main(void)
 	char serverip[] = DEBUG_SERVER_IP_OVERRIDE;
 #endif
 
-	// Try and connect to the server that user gave.
+	// Set up our TCP socket.
+	if (!(tcp = tcp_new(serverip)))
+	{
+		printf("Error initialising TCP connection!\n");
+		status = -1;
+		goto fail;
+	}
 
+	// Try and connect to the server using IP they gave us.
+	if (!tcp_connect(tcp))
+	{
+		printf("Could not establish connection with server.\n");
+		goto fail;
+	}
 
 	// Wait until we send exit signal.
 	while(!signal_interrupt_caught);
@@ -125,9 +139,10 @@ int main(void)
 	// timeout(GAME_SPEED);   // Non block.
 	// keypad(stdscr, TRUE);  // Special keys (i.e arrows)
 
+fail:
 	// Uninitialise ncurses
 	curs_set(CURSOR_SHOW);
 	endwin();
 
-	return 0;
+	return status;
 }
