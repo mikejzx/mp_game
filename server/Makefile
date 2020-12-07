@@ -7,7 +7,7 @@ RM = rm -f
 MKDIR = mkdir -p
 RMDIR = rm -rf
 
-SRCS = $(shell find src -name '*.c' | grep -P '.*\.c$$')
+SRCS = $(shell find -L src -name '*.c' | grep -P '.*\.c$$')
 OBJS = $(patsubst src/%.c,bin/intermed/%.o,$(SRCS))
 DEPS = $(patsubst src/%.c,bin/intermed/%.d,$(SRCS))
 
@@ -21,6 +21,7 @@ run: all
 clean:
 	$(RMDIR) bin
 	$(MKDIR) bin/intermed
+	$(MKDIR) bin/intermed/comm
 
 $(PROJECT): $(OBJS)
 	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS)

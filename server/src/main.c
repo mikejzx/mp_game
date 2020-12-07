@@ -21,7 +21,7 @@ void signal_interrupt_handler(int param)
 // Variables
 static mp_tcp* tcp;
 static mp_client* clients;
-static const int MAX_PLAYERS = 2;
+static const unsigned MAX_PLAYERS = 2;
 
 // Function prototypes.
 int recv_loop(void);
@@ -71,7 +71,20 @@ int main(void)
 fail:
 	// Free memory
 	tcp_free(tcp);
-	if (clients) { free(clients); }
+	if (clients)
+	{
+		for (unsigned i = 0; i < MAX_PLAYERS; ++i)
+		{
+			// Deinitialise each client before freeing all them.
+			// Need to do this to stop threads.
+			if (clients[i].initialised)
+			{
+				client_deinit(&clients[i]);
+			}
+		}
+		// Now free the array.
+		free(clients);
+	}
 
 	return status;
 }
@@ -94,18 +107,17 @@ int recv_loop(void)
 
 		// Look for an empty slot.
 		int slot = -1;
-		for (unsigned i; i < MAX_PLAYERS; ++i)
+		for (unsigned i = 0; i < MAX_PLAYERS; ++i)
 		{
-			if (clients[i].initialised)
+			if (!clients[i].initialised)
 			{
-				continue;
+				slot = i;
+				break;
 			}
-			slot = i;
-			break;
 		}
 		if (slot == -1)
 		{
-			// Server is full. Respond to client,
+			// Server is full. Respond to client, (TODO)
 			// then discard their connection.
 			close(csock);
 			printf("Closing client connection, as server is full.\n");

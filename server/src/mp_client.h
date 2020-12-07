@@ -22,5 +22,6 @@ typedef struct mp_client
 
 void client_init(mp_client* const, SOCKET);
 void client_deinit(mp_client* const);
+void* client_worker(void*);
 
 #endif

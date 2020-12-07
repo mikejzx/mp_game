@@ -22,4 +22,8 @@
 #define SOCKET int
 #define PORT 39992
 
+// Local includes
+#include "comm/mp_packets.h"
+#include "comm/mp_ostream.h"
+
 #endif
