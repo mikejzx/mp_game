@@ -24,6 +24,12 @@ void client_init(mp_client* const c, SOCKET sock)
 	// Initialise I/O streams.
 	if (!(c->os = ostream_new(sock)))
 	{
+		printf("Failed to allocate ostream for client!");
+		return;
+	}
+	if (!(c->is = istream_new(sock)))
+	{
+		printf("Failed to allocate istream for client!");
 		return;
 	}
 
@@ -67,7 +73,11 @@ void client_deinit(mp_client* const c)
 
 	// De-allocate everything.
 	ostream_free(c->os);
-	//istream_free(c->is);
+	istream_free(c->is);
+
+	// Close socket.
+	close(c->sock);
+	c->sock = 0;
 
 	c->initialised = FALSE;
 }
@@ -83,20 +93,38 @@ void* client_worker(void* arg)
 	printf("Started client worker thread.\n");
 
 	// Send a hello packet to client, telling them that they're in.
-	// and telling them
-	{
-		// ostream_begin(c->os, HELLO);
-		// ostream_flush(c->os);
-	}
+	ostream_begin(c->os, P_HELLO);
+	ostream_flush(c->os);
 
 	// Run until we get signalled to stop.
 	while (c->thr_running)
 	{
-		// Do stuff.
-		// (Block until we get a packet, then process it here)
+		// Block until we get a packet, then process it
+		enum mp_packet packet = iread_begin(c->is);
+		switch(packet)
+		{
+			// Client is disconnecting.
+			case P_DISCONN:
+			{
+				// Stop the worker thread.
+				goto worker_exit;
+			}
+
+			default:
+			{
+				// Unknown packet?
+				printf("Ignoring unimplemented packet with code %d...", packet);
+			}
+		}
 	}
 
+worker_exit:
 	printf("Exiting client worker thread.\n");
+
+	// We can deinitialise the client itself here if not already done.
+	c->thr_running = FALSE;
+	client_deinit(c);
+
 	pthread_exit(NULL);
 	return 0;
 }

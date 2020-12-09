@@ -72,6 +72,8 @@ typedef struct
 // static size_t player_count;
 // static const int player_idx;
 static mp_tcp* tcp;
+static mp_istream* is;
+static mp_ostream* os;
 
 /*
  * Entry point of the application.
@@ -122,11 +124,64 @@ int main(void)
 		goto fail;
 	}
 
+	// Create our I/O streams.
+	if (!(os = ostream_new(tcp->handle)))
+	{
+		printf("Failed to create output stream.\n");
+		goto fail;
+	}
+	if (!(is = istream_new(tcp->handle)))
+	{
+		printf("Failed to create input stream.\n");
+		goto fail;
+	}
+
 	// Try and connect to the server using IP they gave us.
 	if (!tcp_connect(tcp))
 	{
 		printf("Could not establish connection with server.\n");
 		goto fail;
+	}
+
+	// Read the server's response packet to our connection.
+	// If we get a P_HELLO then we are good to go.
+	{
+		enum mp_packet res = iread_begin(is);
+		if (res == P_ERROR)
+		{
+			// Got an error. Check what it is:
+			enum mp_packet_err err = iread_err(is);
+			switch (err)
+			{
+				case ERR_TIMED_OUT:
+				{
+					printf("Error: Timed out\n");
+				} break;
+
+				case ERR_SERVER_FULL:
+				{
+					printf("Error: Server full\n");
+				} break;
+
+				case ERR_INTERNAL:
+				{
+					printf("Error: Internal server error.\n");
+				} break;
+
+				default:
+				{
+					printf("Unknown error occurred.\n");
+				} break;
+			}
+			goto fail;
+		}
+		else if (res != P_HELLO)
+		{
+			printf("Did not get P_HELLO response.\n");
+			goto fail;
+		}
+
+		// We got a P_HELLO. Now read data that server sent.
 	}
 
 	// Wait until we send exit signal.
@@ -139,7 +194,17 @@ int main(void)
 	// timeout(GAME_SPEED);   // Non block.
 	// keypad(stdscr, TRUE);  // Special keys (i.e arrows)
 
+	// Game code here...
+
+	// Tell server that we disconnected.
+	ostream_begin(os, P_DISCONN);
+	ostream_flush(os);
+
 fail:
+	// Free memory.
+	if (os) { ostream_free(os); }
+	if (is) { istream_free(is); }
+
 	// Uninitialise ncurses
 	curs_set(CURSOR_SHOW);
 	endwin();

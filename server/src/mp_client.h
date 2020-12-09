@@ -20,7 +20,7 @@ typedef struct mp_client
 	volatile int thr_running;
 
 	// I/O streams for this client.
-	//mp_istream* is;
+	mp_istream* is;
 	mp_ostream* os;
 } mp_client;
 

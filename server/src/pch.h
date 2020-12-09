@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <errno.h>
 
 // Networking
 #include <arpa/inet.h>
@@ -25,5 +26,6 @@
 // Local includes
 #include "comm/mp_packet.h"
 #include "comm/mp_ostream.h"
+#include "comm/mp_istream.h"
 
 #endif

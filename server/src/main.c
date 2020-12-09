@@ -129,8 +129,8 @@ int recv_loop(void)
 		ostream_begin(tmp.os, P_ERROR);
 		owrite_err(tmp.os, ERR_SERVER_FULL);
 		ostream_flush(tmp.os);
+
 		client_deinit(&tmp);
-		close(csock);
 		return TRUE;
 	}
 

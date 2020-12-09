@@ -75,10 +75,7 @@ void ostream_free(mp_ostream* const o)
  */
 mp_ostream* const ostream_begin(mp_ostream* const o, const enum mp_packet p)
 {
-	// Write the packet byte.
-	owrite_u8(o, (unsigned char)p);
-
-	return o;
+	return owrite_u8(o, (unsigned char)p);
 }
 
 /*
@@ -95,8 +92,8 @@ void ostream_flush(mp_ostream* const o)
 	}
 	printf(">\n");
 
-	// Send the data. (TODO)
-	// send(o->sock, DATA ???, SIZE ???, 0);
+	// Send the data.
+	send(o->sock, o->buf, o->buf_len, 0);
 
 	// Clear the stream
 	memset(o->buf, 0, o->buf_size);

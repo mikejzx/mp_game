@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <errno.h>
 
 // Networking
 #include <arpa/inet.h>
@@ -23,5 +24,10 @@
 #define FAIL 0
 #define SOCKET int
 #define PORT 39992
+
+// Local includes.
+#include "comm/mp_packet.h"
+#include "comm/mp_ostream.h"
+#include "comm/mp_istream.h"
 
 #endif

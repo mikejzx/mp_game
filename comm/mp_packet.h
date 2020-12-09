@@ -12,7 +12,7 @@ enum mp_packet
 
 	/*
 	 * Server: there was an error.
-	 * + next byte is the error code.
+	 * [0] error code.
 	 */
 	P_ERROR   = 1,
 
@@ -20,12 +20,12 @@ enum mp_packet
 	 * Server: client's request to join is accepted.
 	 * to join the server.
 	 */
-	P_HELLO   = 1, // Connect client to server.
+	P_HELLO   = 2, // Connect client to server.
 
 	/*
 	 * Client: disconnected from server.
 	 */
-	P_DISCONN = 2, // Disconnect from server.
+	P_DISCONN = 3, // Disconnect from server.
 };
 
 /*
