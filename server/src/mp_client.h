@@ -18,10 +18,15 @@ typedef struct mp_client
 
 	// Set to non-zero to stop the thread.
 	volatile int thr_running;
+
+	// I/O streams for this client.
+	//mp_istream* is;
+	mp_ostream* os;
 } mp_client;
 
 void client_init(mp_client* const, SOCKET);
 void client_deinit(mp_client* const);
+void client_start(mp_client* const);
 void* client_worker(void*);
 
 #endif

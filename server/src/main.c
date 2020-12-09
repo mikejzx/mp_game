@@ -51,8 +51,7 @@ int main(void)
 
 	// Allocate memory for all the clients we will have.
 	size_t clients_size = sizeof(mp_client) * MAX_PLAYERS;
-	clients = malloc(clients_size);
-	if (!clients)
+	if (!(clients = malloc(clients_size)))
 	{
 		printf("Failed to allocate memory for clients.");
 		status = -1;
@@ -98,35 +97,49 @@ int recv_loop(void)
 {
 	// Accept incoming connections
 	SOCKET csock = accept(tcp->handle, (struct sockaddr*)&tcp->addr, &tcp->addr_len);
-	if (csock > 0)
+	if (csock <= 0)
 	{
-		printf("Accepted client connection request.\n");
-
-		// Now we initialise our client. Memory for it was
-		// allocated already on server startup.
-
-		// Look for an empty slot.
-		int slot = -1;
-		for (unsigned i = 0; i < MAX_PLAYERS; ++i)
-		{
-			if (!clients[i].initialised)
-			{
-				slot = i;
-				break;
-			}
-		}
-		if (slot == -1)
-		{
-			// Server is full. Respond to client, (TODO)
-			// then discard their connection.
-			close(csock);
-			printf("Closing client connection, as server is full.\n");
-			return TRUE;
-		}
-
-		// Found a slot. Initialise client and their thread.
-		client_init(&clients[slot], csock);
+		// Failed to accept connection.
+		// Just continue listening.
+		return TRUE;
 	}
+	printf("Accepted client connection request.\n");
+
+	// Now we initialise our client. Memory for it was
+	// allocated already on server startup.
+
+	// Initialise client and their thread.
+	mp_client tmp;
+	client_init(&tmp, csock);
+
+	// Look for an empty slot to store the client.
+	int slot = -1;
+	for (unsigned i = 0; i < MAX_PLAYERS; ++i)
+	{
+		if (!clients[i].initialised)
+		{
+			slot = i;
+			break;
+		}
+	}
+	if (slot == -1)
+	{
+		// Server is full. Send the SERVER_FULL error
+		// code back to client, and close their connection.
+		ostream_begin(tmp.os, P_ERROR);
+		owrite_err(tmp.os, ERR_SERVER_FULL);
+		ostream_flush(tmp.os);
+		client_deinit(&tmp);
+		close(csock);
+		return TRUE;
+	}
+
+	// We have a slot, so copy the
+	// old structure into this.
+	clients[slot] = tmp;
+
+	// All is good, we can actually start the client's worker thread.
+	client_start(&clients[slot]);
 
 	return TRUE;
 }
