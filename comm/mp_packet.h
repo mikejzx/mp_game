@@ -12,13 +12,19 @@ enum mp_packet
 
 	/*
 	 * Server: there was an error.
-	 * [0] error code.
+	 * [0, u8] error code.
 	 */
 	P_ERROR   = 1,
 
 	/*
 	 * Server: client's request to join is accepted.
 	 * to join the server.
+	 * + [0, u16] number of players in server.
+	 * + [0, u16] maximum player count.
+	 * + [0, u8] map width
+	 * + [0, u8] map height
+	 * + [0, u8] player's X spawn position
+	 * + [0, u8] player's Y spawn position
 	 */
 	P_HELLO   = 2, // Connect client to server.
 

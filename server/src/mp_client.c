@@ -7,6 +7,12 @@
 #include "pch.h"
 #include "mp_client.h"
 
+// Forward declarations of externals that we reference.
+extern unsigned g_max_players;
+extern unsigned g_map_wid;
+extern unsigned g_map_hei;
+extern unsigned server_player_count(void);
+
 /*
  * Initialise a client.
  *
@@ -93,8 +99,23 @@ void* client_worker(void* arg)
 	printf("Started client worker thread.\n");
 
 	// Send a hello packet to client, telling them that they're in.
-	ostream_begin(c->os, P_HELLO);
-	ostream_flush(c->os);
+	{
+		ostream_begin(c->os, P_HELLO);
+
+		// Player counts (cur, max)
+		owrite_u16(c->os, (unsigned short)server_player_count());
+		owrite_u16(c->os, (unsigned short)g_max_players);
+
+		// Map width/height
+		owrite_u8(c->os, (unsigned char)g_map_wid);
+		owrite_u8(c->os, (unsigned char)g_map_hei);
+
+		// Generate a random spawn position
+		owrite_u8(c->os, (unsigned char)(rand() % g_map_wid));
+		owrite_u8(c->os, (unsigned char)(rand() % g_map_hei));
+
+		ostream_flush(c->os);
+	}
 
 	// Run until we get signalled to stop.
 	while (c->thr_running)

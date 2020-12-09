@@ -182,6 +182,15 @@ int main(void)
 		}
 
 		// We got a P_HELLO. Now read data that server sent.
+		unsigned pcount = (unsigned)iread_u16(is);
+		unsigned pmax =   (unsigned)iread_u16(is);
+		unsigned mapwid = (unsigned)iread_u8(is);
+		unsigned maphei = (unsigned)iread_u8(is);
+		unsigned spawn_x = (unsigned)iread_u8(is);
+		unsigned spawn_y = (unsigned)iread_u8(is);
+		printf("There are %d/%d players in the server.\n", pcount, pmax);
+		printf("Map size: %dx%d\n", mapwid, maphei);
+		printf("Spawn pos: [%d, %d]\n", spawn_x, spawn_y);
 	}
 
 	// Wait until we send exit signal.

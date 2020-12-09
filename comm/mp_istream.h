@@ -24,6 +24,7 @@ void istream_free(mp_istream* const);
 enum mp_packet iread_begin(mp_istream* const);
 enum mp_packet_err iread_err(mp_istream* const);
 unsigned char iread_u8(mp_istream* const);
+unsigned iread_u16(mp_istream* const);
 unsigned iread_u32(mp_istream* const);
 char* iread_str(mp_istream* const, size_t*);
 

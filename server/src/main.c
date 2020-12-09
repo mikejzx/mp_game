@@ -21,7 +21,11 @@ void signal_interrupt_handler(int param)
 // Variables
 static mp_tcp* tcp;
 static mp_client* clients;
-static const unsigned MAX_PLAYERS = 2;
+
+// Globals
+unsigned g_max_players = 4;
+unsigned g_map_wid = 16;
+unsigned g_map_hei = 8;
 
 // Function prototypes.
 int recv_loop(void);
@@ -35,6 +39,9 @@ int main(void)
 {
 	int status = 0;
 	printf("-- Simple Game Server --\n");
+
+	// Seed RNG
+	srand(time(0));
 
 	// Register signal interrupt handler.
 	struct sigaction sigact_inter;
@@ -50,7 +57,7 @@ int main(void)
 	printf("TCP listener initialised. Listening...\n");
 
 	// Allocate memory for all the clients we will have.
-	size_t clients_size = sizeof(mp_client) * MAX_PLAYERS;
+	size_t clients_size = sizeof(mp_client) * g_max_players;
 	if (!(clients = malloc(clients_size)))
 	{
 		printf("Failed to allocate memory for clients.");
@@ -72,7 +79,7 @@ fail:
 	tcp_free(tcp);
 	if (clients)
 	{
-		for (unsigned i = 0; i < MAX_PLAYERS; ++i)
+		for (unsigned i = 0; i < g_max_players; ++i)
 		{
 			// Deinitialise each client before freeing all them.
 			// Need to do this to stop threads.
@@ -114,7 +121,7 @@ int recv_loop(void)
 
 	// Look for an empty slot to store the client.
 	int slot = -1;
-	for (unsigned i = 0; i < MAX_PLAYERS; ++i)
+	for (unsigned i = 0; i < g_max_players; ++i)
 	{
 		if (!clients[i].initialised)
 		{
@@ -142,4 +149,22 @@ int recv_loop(void)
 	client_start(&clients[slot]);
 
 	return TRUE;
+}
+
+/*
+ * @return the number of players in the server.
+ */
+unsigned server_player_count(void)
+{
+	// Iterate over the clients array, and count all
+	// those who are properly initialised.
+	unsigned count = 0;
+	for (unsigned i = 0; i < g_max_players; ++i)
+	{
+		if (clients[i].initialised)
+		{
+			++count;
+		}
+	}
+	return count;
 }

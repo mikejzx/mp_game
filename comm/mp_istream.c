@@ -69,6 +69,20 @@ unsigned char iread_u8(mp_istream* const i)
 	return x;
 }
 
+/* @return 16-bit unsigned from packet */
+unsigned iread_u16(mp_istream* const i)
+{
+	// Read 2 bytes from packet
+	char bytes[sizeof(unsigned short)];
+	TEMP_FAILURE_RETRY(recv(i->sock, &bytes, sizeof(bytes), 0));
+
+	// Reconstruct from little-endian order
+	return (unsigned short)(
+		(unsigned char)bytes[1] << 8 |
+		(unsigned char)bytes[0]
+	);
+}
+
 /* @return 32-bit unsigned from packet */
 unsigned iread_u32(mp_istream* const i)
 {
