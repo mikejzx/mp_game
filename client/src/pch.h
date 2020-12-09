@@ -2,12 +2,13 @@
 #define MP_PCH_H
 
 // Standard includes.
+#include <errno.h>
+#include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
 #include <string.h>
-#include <errno.h>
+#include <unistd.h>
 
 // Networking
 #include <arpa/inet.h>

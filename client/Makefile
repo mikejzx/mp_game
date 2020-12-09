@@ -1,7 +1,7 @@
 PROJECT = mp_client
 CC = gcc
 CFLAGS = -std=c18 -Wall -Isrc -D_GNU_SOURCE
-LDFLAGS = -lncurses
+LDFLAGS = -lncurses -lpthread
 
 RM = rm -f
 MKDIR = mkdir -p

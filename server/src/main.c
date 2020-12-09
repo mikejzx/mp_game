@@ -144,6 +144,7 @@ int recv_loop(void)
 	// We have a slot, so copy the
 	// old structure into this.
 	clients[slot] = tmp;
+	client_set_index(&clients[slot], slot);
 
 	// All is good, we can actually start the client's worker thread.
 	client_start(&clients[slot]);
@@ -167,4 +168,14 @@ unsigned server_player_count(void)
 		}
 	}
 	return count;
+}
+
+/*
+ * Get a client.
+ *
+ * @param i  Index of client to get.
+ */
+mp_client* server_client_get(size_t i)
+{
+	return &clients[i];
 }

@@ -12,6 +12,7 @@ extern unsigned g_max_players;
 extern unsigned g_map_wid;
 extern unsigned g_map_hei;
 extern unsigned server_player_count(void);
+extern mp_client* server_client_get(size_t);
 
 /*
  * Initialise a client.
@@ -26,6 +27,8 @@ void client_init(mp_client* const c, SOCKET sock)
 	c->initialised = FALSE;
 	c->thr_running = FALSE;
 	c->sock = sock;
+	c->x = c->y = 0;
+	c->index = -1;
 
 	// Initialise I/O streams.
 	if (!(c->os = ostream_new(sock)))
@@ -40,6 +43,17 @@ void client_init(mp_client* const c, SOCKET sock)
 	}
 
 	c->initialised = TRUE;
+}
+
+/*
+ * Set the index of this client
+ *
+ * @param c    Client to modify.
+ * @param idx  Index to set to.
+ */
+void client_set_index(mp_client* const c, int idx)
+{
+	c->index = idx;
 }
 
 /*
@@ -85,6 +99,8 @@ void client_deinit(mp_client* const c)
 	close(c->sock);
 	c->sock = 0;
 
+	c->x = c->y = 0;
+
 	c->initialised = FALSE;
 }
 
@@ -103,16 +119,28 @@ void* client_worker(void* arg)
 		ostream_begin(c->os, P_HELLO);
 
 		// Player counts (cur, max)
-		owrite_u16(c->os, (unsigned short)server_player_count());
-		owrite_u16(c->os, (unsigned short)g_max_players);
+		owrite_u8(c->os, (unsigned char)server_player_count());
+		owrite_u8(c->os, (unsigned char)g_max_players);
+		owrite_u8(c->os, (unsigned char)c->index);
 
 		// Map width/height
 		owrite_u8(c->os, (unsigned char)g_map_wid);
 		owrite_u8(c->os, (unsigned char)g_map_hei);
 
 		// Generate a random spawn position
-		owrite_u8(c->os, (unsigned char)(rand() % g_map_wid));
-		owrite_u8(c->os, (unsigned char)(rand() % g_map_hei));
+		c->x = (unsigned char)(rand() % g_map_wid);
+		c->y = (unsigned char)(rand() % g_map_hei);
+
+		// Iterate over all the players, and write their
+		// initial positions.
+		for (unsigned i = 0; i < g_max_players; ++i)
+		{
+			mp_client* p = server_client_get(i);
+			if (!p->initialised) continue;
+			owrite_u8(c->os, (unsigned char)p->index);
+			owrite_u8(c->os, (unsigned char)p->x);
+			owrite_u8(c->os, (unsigned char)p->y);
+		}
 
 		ostream_flush(c->os);
 	}
@@ -124,6 +152,31 @@ void* client_worker(void* arg)
 		enum mp_packet packet = iread_begin(c->is);
 		switch(packet)
 		{
+			// Client updated
+			case P_POS_UPDATE:
+			{
+				// Read player's position.
+				c->x = (int)iread_u8(c->is);
+				c->y = (int)iread_u8(c->is);
+
+				// Respond with state update.
+				ostream_begin(c->os, P_UPDATE);
+				owrite_u8(c->os, (unsigned char)server_player_count());
+
+				// Iterate over all the initialised players.
+				for (unsigned i = 0; i < g_max_players; ++i)
+				{
+					mp_client* p = server_client_get(i);
+					if (!p->initialised) continue;
+
+					owrite_u8(c->os, (unsigned char)p->index);
+					owrite_u8(c->os, (unsigned char)p->x);
+					owrite_u8(c->os, (unsigned char)p->y);
+				}
+
+				ostream_flush(c->os);
+			} break;
+
 			// Client is disconnecting.
 			case P_DISCONN:
 			{

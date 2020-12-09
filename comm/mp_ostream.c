@@ -85,12 +85,12 @@ mp_ostream* const ostream_begin(mp_ostream* const o, const enum mp_packet p)
  */
 void ostream_flush(mp_ostream* const o)
 {
-	printf("Sending %d bytes: < ", o->buf_len);
-	for (unsigned i = 0; i < o->buf_len; ++i)
-	{
-		printf("%02X ", o->buf[i]);
-	}
-	printf(">\n");
+	// printf("Sending %d bytes: < ", o->buf_len);
+	// for (unsigned i = 0; i < o->buf_len; ++i)
+	// {
+	// 	printf("%02X ", o->buf[i]);
+	// }
+	// printf(">\n");
 
 	// Send the data.
 	send(o->sock, o->buf, o->buf_len, 0);
