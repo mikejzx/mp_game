@@ -1,9 +1,16 @@
 mp_game
 =======
 
-This is an attempt at writing a basic "multiplayer" game in C that runs
-in the terminal. I guess I decided to write this to teach myself a
-little more about how to use sockets.
+This is an attempt at writing a basic "multiplayer game" in C that runs
+in the terminal. This is simply a personal project to teach myself a
+little more about socket programming in general.
 
-The repository consists of two projects, mp_server, and mp_client,
+To keep things rather simple, the game runs entirely over TCP. Obviously
+this is unideal in a proper multiplayer game, which should make use
+of UDP. TCP seems to be too slow for a realtime game like this.
+
+The idea was to keep this project fairly simple to just at least get
+an idea of how to do something like this somewhat properly.
+
+The repository consists of two main projects, mp_server, and mp_client,
 which are the games client and server respectively (surprise surprise).

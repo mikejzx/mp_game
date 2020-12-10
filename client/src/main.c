@@ -25,13 +25,13 @@
 #include "mp_tcp.h"
 
 // Debugging
-#define DEBUG_SKIP_SERVER 1
+#define DEBUG_SKIP_SERVER 0
 #define DEBUG_SERVER_IP_OVERRIDE "127.0.0.1"
 
 // Other constants
 #define CURSOR_HIDE 0
 #define CURSOR_SHOW 0
-#define GAME_SPEED 300
+#define GAME_SPEED 25
 
 // Function prototypes
 void draw_map(void);
@@ -51,9 +51,6 @@ void signal_interrupt_handler(int param)
 // Structure for players in the game.
 typedef struct
 {
-	// Whether this has been initialised.
-	int initialised;
-
 	// Whether this player is the actually player
 	// on this computer.
 	int is_player;
@@ -114,6 +111,12 @@ int main(void)
 
 		// Get user input
 		getstr(serverip);
+
+		// If user entered 'localhost' replace it with 127.0.0.1
+		if (strcmp(serverip, "localhost") == 0)
+		{
+			strcpy(serverip, "127.0.0.1");
+		}
 
 		refresh();
 	}
@@ -197,7 +200,6 @@ int main(void)
 		players = malloc(sizeof(player) * player_count);
 		for (unsigned i = 0; i < player_count; ++i)
 		{
-			players[i].initialised = TRUE;
 			players[i].index = (int)iread_u8(is);
 			players[i].x = (int)iread_u8(is);
 			players[i].y = (int)iread_u8(is);
@@ -242,12 +244,13 @@ int main(void)
 		printf("Caught interrupt signal. Terminating...");
 	}
 
+	// Wait for thread to stop.
+	stop_worker();
+	while(thr_running);
+
 	// Tell server that we disconnected.
 	ostream_begin(os, P_DISCONN);
 	ostream_flush(os);
-
-	// Stop thread.
-	stop_worker();
 
 fail:
 	// Uninitialise ncurses
@@ -323,7 +326,7 @@ int get_input(void)
 		case (KEY_LEFT):
 		{
 			// Move player position 1 left.
-			players[player_idx].x = (players[player_idx].x - 1) % map_width;
+			players[player_idx].x = (players[player_idx].x - 1) % (int)map_width;
 		} break;
 
 		// Move right
@@ -334,7 +337,7 @@ int get_input(void)
 		case (KEY_RIGHT):
 		{
 			// Move player position 1 right.
-			players[player_idx].x = (players[player_idx].x + 1) % map_width;
+			players[player_idx].x = (players[player_idx].x + 1) % (int)map_width;
 		} break;
 
 		// Move up
@@ -345,7 +348,7 @@ int get_input(void)
 		case (KEY_UP):
 		{
 			// Move player position 1 up.
-			players[player_idx].y = (players[player_idx].y - 1) % map_height;
+			players[player_idx].y = (players[player_idx].y - 1) % (int)map_height;
 		} break;
 
 		// Move down
@@ -356,7 +359,7 @@ int get_input(void)
 		case (KEY_DOWN):
 		{
 			// Move player position 1 down.
-			players[player_idx].y = (players[player_idx].y + 1) % map_height;
+			players[player_idx].y = (players[player_idx].y + 1) % (int)map_height;
 		} break;
 	}
 
@@ -399,8 +402,8 @@ void stop_worker(void)
 {
 	if (thr_running)
 	{
-		pthread_join(thr, 0);
 		thr_running = FALSE;
+		pthread_join(thr, 0);
 	}
 }
 
@@ -410,7 +413,7 @@ void stop_worker(void)
 void* worker_func(void* arg)
 {
 	// Network loop
-	while(!signal_interrupt_caught)
+	while(thr_running && !signal_interrupt_caught)
 	{
 		// Here we constantly send our position to the server.
 		// The server will respond with the positions of all
@@ -438,27 +441,19 @@ void* worker_func(void* arg)
 				for (unsigned i = 0; i < player_count; ++i)
 				{
 					// Read this player.
-					unsigned idx = (unsigned)iread_u8(is);
+					int idx = (int)iread_u8(is);
 					int x = (int)iread_u8(is);
 					int y = (int)iread_u8(is);
 
-					// Skip if it is this player
-					if (idx == glob_player_idx) continue;
-
-					// Look for an uninitialised player.
-					// We should have one since we realloc'd above.
-					for (unsigned j = 0; j < player_count; ++j)
+					if (idx == glob_player_idx)
 					{
-						if (!players[j].initialised)
-						{
-							players[j].initialised = TRUE;
-							players[j].index = idx;
-						}
-						if (players[j].index == idx)
-						{
-							players[j].x = x;
-							players[j].y = y;
-						}
+						player_idx = i;
+					}
+					else
+					{
+						players[i].index = idx;
+						players[i].x = x;
+						players[i].y = y;
 					}
 				}
 			} break;

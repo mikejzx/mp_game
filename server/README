@@ -1,7 +1,8 @@
 mp_server
 =========
 
-The server application. Here's some of the details:
-
-* Runs on port ....
-* etc...
+The server application. Runs on port 39992 and works by listening
+for client updates. The server then responds to the clients with
+the current state of all players in the server. The client replaces
+their local state with the server's (except for local player
+position, as this is always calculated locally for obvious reasons)

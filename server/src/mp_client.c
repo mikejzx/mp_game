@@ -87,8 +87,8 @@ void client_deinit(mp_client* const c)
 	// Tell thread to stop and join.
 	if (c->thr_running)
 	{
-		pthread_join(c->thr, 0);
 		c->thr_running = FALSE;
+		pthread_join(c->thr, 0);
 	}
 
 	// De-allocate everything.
@@ -187,7 +187,8 @@ void* client_worker(void* arg)
 			default:
 			{
 				// Unknown packet?
-				printf("Ignoring unimplemented packet with code %d...", packet);
+				printf("Ignoring unimplemented packet with code %d...\n", packet);
+				goto worker_exit;
 			}
 		}
 	}

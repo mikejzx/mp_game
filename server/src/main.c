@@ -24,8 +24,8 @@ static mp_client* clients;
 
 // Globals
 unsigned g_max_players = 4;
-unsigned g_map_wid = 16;
-unsigned g_map_hei = 8;
+unsigned g_map_wid = 32;
+unsigned g_map_hei = 12;
 
 // Function prototypes.
 int recv_loop(void);
@@ -37,7 +37,6 @@ int recv_loop(void);
  */
 int main(void)
 {
-	int status = 0;
 	printf("-- Simple Game Server --\n");
 
 	// Seed RNG
@@ -61,8 +60,7 @@ int main(void)
 	if (!(clients = malloc(clients_size)))
 	{
 		printf("Failed to allocate memory for clients.");
-		status = -1;
-		goto fail;
+		exit(-1);
 	}
 	memset(clients, 0, clients_size);
 
@@ -74,7 +72,6 @@ int main(void)
 		printf("Signal interrupt caught. Terminating...\n");
 	}
 
-fail:
 	// Free memory
 	tcp_free(tcp);
 	if (clients)
@@ -92,7 +89,7 @@ fail:
 		free(clients);
 	}
 
-	return status;
+	return 0;
 }
 
 /*
